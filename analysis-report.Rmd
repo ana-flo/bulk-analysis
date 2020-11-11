@@ -1,0 +1,45 @@
+---
+title: "analysis-POG"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(patchwork)
+library(drake)
+library(ggplot2)
+library(tidyverse)
+library(RColorBrewer)
+```
+
+ This is an analysis of the POG cohort data, looking at immune infiltration ad pathway activation. Main step would be to run a pca and understand where the main sources of variations come from. 
+
+Visualize first eigenvalues:
+
+
+```{r}
+plot1 <- drake::readd(plot1)
+plot1
+```
+
+Visualize samples on first two components, first by splitting on sample type:
+
+```{r}
+annotation.pca <- drake::readd(annotation.pca)
+p1 <- ggplot(annotation.pca  , aes(x=PC1, y=PC2, color=SAMPLE_TYPE))+geom_point()+ theme_bw()
+```
+Now we look at sample tissue of origin. Due to the heterogeneity of the dataset the visualisation is done for combinations of tissue and indications for which there are at least 5 samples. The main observation is that liver tends to separate from lung and lymph nodes. 
+
+```{r}
+annotation.pca$SAMPLE_TISSUE_OF_ORIGIN <- recode(annotation.pca$SAMPLE_TISSUE_OF_ORIGIN, "abdominal wall"="abdomen", )
+p2 <- ggplot(annotation.pca %>% group_by(SAMPLE_TISSUE_OF_ORIGIN, CANCER_TYPE_SHORT) %>% filter(n()>4) , aes(x=PC1, y=PC2, color=SAMPLE_TISSUE_OF_ORIGIN))+scale_color_brewer(type="qual",palette = "Paired")+geom_point()+ theme_bw()
+p1
+p2
+```
+```{r}
+p3 <- ggplot(annotation.pca %>% group_by(SAMPLE_TISSUE_OF_ORIGIN, CANCER_TYPE_SHORT) %>% filter(n()>4) , aes(x=PC1, y=PC2, color=CANCER_TYPE_SHORT))+scale_color_brewer(type="qual",palette = "Paired")+geom_point()+ theme_bw()
+p3
+```
+
+
+## Analyze immune infiltrate levels 
